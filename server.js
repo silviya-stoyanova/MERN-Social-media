@@ -7,10 +7,15 @@ const users = require("./routes/api/users");
 
 const app = express();
 
-connectDB(); // connect the database
+// connect the database
+connectDB();
+
+// init middleware
+app.use(express.json({ extended: false }));
 
 app.get("/", (req, res) => res.send("My API works!"));
 
+// Define routes
 app.use("/api/auth", auth);
 app.use("/api/posts", posts);
 app.use("/api/profile", profile);
