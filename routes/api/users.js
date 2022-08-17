@@ -76,7 +76,7 @@ router.post(
         },
       };
 
-      jwt.sign(payload, jwtSecretkey, { expiresIn: 360000 }, (err, jwt) => {
+      jwt.sign(payload, jwtSecretkey, { expiresIn: '1000d' }, (err, jwt) => {
         if (err) {
           res
             .status(400)
