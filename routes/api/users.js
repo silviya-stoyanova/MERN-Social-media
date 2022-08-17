@@ -1,6 +1,11 @@
 const express = require("express");
+const config = require("config");
+const jwtSecretkey = config.get("jwtSecretKey");
+
 const bcrypt = require("bcrypt");
 const gravatar = require("gravatar");
+const jwt = require("jsonwebtoken");
+
 const { check, validationResult } = require("express-validator");
 
 const router = express.Router();
@@ -26,10 +31,9 @@ router.post(
     // response
     // console.log(req.body);
 
-    // return jwt to log the user immediatelly
-
     // validate user input
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
@@ -64,7 +68,23 @@ router.post(
 
       await newUser.save();
 
-      res.send("User route - post");
+      // return jwt to log the user immediatelly
+      // res.send("User route - post");
+      const payload = {
+        user: {
+          id: newUser.id,
+        },
+      };
+
+      jwt.sign(payload, jwtSecretkey, { expiresIn: 360000 }, (err, jwt) => {
+        if (err) {
+          res
+            .status(400)
+            .json({ message: "Something went wrong when generating JWT. Error message: " + err.message });
+        }
+
+        res.json({token: jwt});
+      });
     } catch (err) {
       console.log(err.message);
       res.status(500).json({ errors: err.message });
