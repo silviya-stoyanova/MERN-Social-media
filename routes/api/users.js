@@ -25,7 +25,7 @@ router.post(
       "email",
       "Email is required. It should be in the format: email@domain.topleveldomain"
     ).isEmail(),
-    check("password", "Password is required.").isLength({ min: 6 }),
+    check("password", "Password is required. It should have a minimum lenght of 6 symbols.").isLength({ min: 6 }),
   ],
   async (req, res) => {
     // response
