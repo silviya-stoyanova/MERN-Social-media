@@ -1,12 +1,13 @@
-const express = require("express");
-const router = express.Router();
-const authMiddleware = require("../../middleware/auth");
 const bcrypt = require("bcrypt");
-const User = require("../../models/User");
-const { check, validationResult } = require("express-validator");
+const config = require("config");
+const express = require("express");
+const { check } = require("express-validator");
 const jwt = require("jsonwebtoken");
 
-const config = require("config");
+const authMiddleware = require("../../middleware/auth");
+const User = require("../../models/User");
+
+const router = express.Router();
 const jwtSecretKey = config.get("jwtSecretKey");
 
 router.get("/", authMiddleware, async (req, res) => {
