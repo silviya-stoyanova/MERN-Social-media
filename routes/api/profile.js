@@ -4,6 +4,40 @@ const router = express.Router();
 const authMiddleware = require("../../middleware/auth-middleware");
 const Profile = require("../../models/Profile");
 
+router.get("/all", async (req, res) => {
+  try {
+    const allProfiles = await Profile.find().populate("user", [
+      "name",
+      "avatar",
+    ]);
+    res.send(allProfiles);
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
+
+router.get("/:userId", async (req, res) => {
+  try {
+    const userProfile = await Profile.findOne({
+      user: req.params.userId,
+    }).populate("user", ["name", "avatar"]);
+
+    if (!userProfile) {
+      res.status(400).json({ message: "Profile not found." });
+    }
+
+    res.send(userProfile);
+  } catch (error) {
+    const isInvalidIdPassed = error.kind == "ObjectId";
+
+    if (isInvalidIdPassed) {
+      res.status(400).json({ message: "Profile not found." });
+    }
+
+    res.status(500).send(error.message);
+  }
+});
+
 router.get("/me", authMiddleware, async (req, res) => {
   try {
     const profile = await Profile.findOne({ user: req.user._id }).populate(
