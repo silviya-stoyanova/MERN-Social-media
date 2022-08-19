@@ -34,13 +34,61 @@ router.post(
   ],
   async (req, res) => {
     const errors = validationResult(req);
+
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    res.json(req.body)
+    const {
+      company,
+      website,
+      location,
+      status,
+      skills,
+      bio,
+      githubusername,
+      youtube,
+      twitter,
+      facebook,
+      linkedin,
+      instagram,
+    } = req.body;
+
+    const newProfileData = {
+      user: req.user._id,
+      company,
+      website,
+      location,
+      status,
+      skills,
+      bio,
+      githubusername,
+      social: {
+        youtube,
+        twitter,
+        facebook,
+        linkedin,
+        instagram,
+      },
+      lastModifiedDate: Date.now(),
+    };
+
+    const existsingProfileData = await Profile.findOne({ user: req.user._id });
+
+    if (existsingProfileData) {
+      await Profile.findOneAndUpdate({ user: req.user._id }, newProfileData);
+    } else {
+      new Profile({
+        ...newProfileData,
+      }).save();
+    }
+
+    res.json("Success");
+
     try {
-    } catch (err) {}
+    } catch ({ message }) {
+      res.status(500).json(message);
+    }
   }
 );
 
