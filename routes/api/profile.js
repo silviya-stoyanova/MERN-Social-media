@@ -1,6 +1,5 @@
 const express = require("express");
 const { check, validationResult } = require("express-validator");
-const jwt = require("jsonwebtoken");
 const router = express.Router();
 const authMiddleware = require("../../middleware/auth-middleware");
 const Profile = require("../../models/Profile");
@@ -130,6 +129,71 @@ router.post(
   }
 );
 
+router.put(
+  "/me/experience",
+  [
+    authMiddleware,
+    [
+      check("title", "Title is required.").notEmpty(),
+      check("company", "Company is required.").notEmpty(),
+      check("from", "From is required.").notEmpty(),
+    ],
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+      }
+
+      const experience = req.body;
+      const profileData = await Profile.findOne({ user: req.user._id });
+      profileData.experience.unshift(experience);
+      await profileData.save();
+
+      res.send(
+        `Successfully added experience to user profile: ${req.user.name}`
+      );
+    } catch ({ message }) {
+      res.status(500).json({ message });
+    }
+  }
+);
+
+router.put(
+  "/me/education",
+  [
+    authMiddleware,
+    [
+      check("school", "School is required.").notEmpty(),
+      check("degree", "Degree is required.").notEmpty(),
+      check("fieldOfStudy", "Field of study is required.").notEmpty(),
+      check("from", "From is required.").notEmpty(),
+    ],
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+      }
+
+      const education = req.body;
+      const profileData = await Profile.findOne({ user: req.user._id });
+      profileData.education.unshift(education);
+      await profileData.save();
+
+      res.send(
+        `Successfully added education to user profile: ${req.user.name}`
+      );
+    } catch ({ message }) {
+      res.status(500).json({ message });
+    }
+  }
+);
+
 router.delete("/me/delete", authMiddleware, async (req, res) => {
   try {
     await Profile.findOneAndDelete({ user: req.user._id });
@@ -142,5 +206,43 @@ router.delete("/me/delete", authMiddleware, async (req, res) => {
     res.status(500).json(message);
   }
 });
+
+router.delete(
+  "/me/delete/experience/:experienceId",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const experienceId = req.params.experienceId;
+      const profile = await Profile.findOne({ user: req.user._id });
+      profile.experience = profile.experience.filter(
+        (x) => x._id != experienceId
+      );
+      profile.save();
+
+      res.send("Successfully deleted this experience.");
+    } catch ({ message }) {
+      res.status(500).json({ message });
+    }
+  }
+);
+
+router.delete(
+  "/me/delete/education/:educationId",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const educationId = req.params.educationId;
+      const profile = await Profile.findOne({ user: req.user._id });
+      profile.education = profile.education.filter(
+        (x) => x._id != educationId
+      );
+      profile.save();
+
+      res.send("Successfully deleted this education.");
+    } catch ({ message }) {
+      res.status(500).json({ message });
+    }
+  }
+);
 
 module.exports = router;
