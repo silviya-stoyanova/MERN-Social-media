@@ -116,13 +116,13 @@ router.post(
 
       if (existsingProfileData) {
         await Profile.findOneAndUpdate({ user: req.user._id }, newProfileData);
-        res.send(`Updated: ${req.user.name}`);
+        res.send(`Updated: ${req.user.name} profile.`);
       } else {
         new Profile({
           ...newProfileData,
         }).save();
 
-        res.send(`Added: ${req.user.name}`);
+        res.send(`Added: ${req.user.name} profile.`);
       }
     } catch ({ message }) {
       res.status(500).json(message);
@@ -134,7 +134,7 @@ router.delete("/me/delete", authMiddleware, async (req, res) => {
   try {
     await Profile.findOneAndDelete({ user: req.user._id });
     await User.findOneAndDelete({ user: req.user._id });
-    
+
     res.send(
       `Successfully deleted the profile of user: ${req.user.name} and the user itself.`
     );
