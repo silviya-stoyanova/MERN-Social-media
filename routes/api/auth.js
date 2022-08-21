@@ -15,7 +15,7 @@ router.get("/", authMiddleware, async (req, res) => {
 
   try {
     const user = await User.findById(req.user._id).select("-password");
-    res.json({user});
+    res.json({ user });
   } catch ({ message }) {
     res.status(500).json({ message });
   }
@@ -38,8 +38,8 @@ router.post(
 
       // check the password
       const isPasswordCorrect = await bcrypt.compare(
-          passwordFromInput,
-          user.password
+        passwordFromInput,
+        user.password
       );
 
       if (!isPasswordCorrect) {
@@ -57,7 +57,7 @@ router.post(
           });
         }
 
-        res.send(jwt);
+        res.json({ token: jwt });
       });
     } catch ({ message }) {
       return res.status(500).json({ message });

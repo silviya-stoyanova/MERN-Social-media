@@ -76,18 +76,17 @@ router.post(
       const payload = {
         user: {
           id: newUser.id,
+          name: newUser.name,
         },
       };
 
       jwt.sign(payload, jwtSecretkey, { expiresIn: "1000d" }, (err, jwt) => {
         if (err) {
-          res
-            .status(400)
-            .json({
-              message:
-                "Something went wrong when generating JWT. Error message: " +
-                err.message,
-            });
+          res.status(400).json({
+            message:
+              "Something went wrong when generating JWT. Error message: " +
+              err.message,
+          });
         }
 
         res.json({ token: jwt });

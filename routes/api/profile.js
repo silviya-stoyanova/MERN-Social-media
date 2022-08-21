@@ -1,8 +1,10 @@
 const express = require("express");
 const { check, validationResult } = require("express-validator");
+const jwt = require("jsonwebtoken");
 const router = express.Router();
 const authMiddleware = require("../../middleware/auth-middleware");
 const Profile = require("../../models/Profile");
+const User = require("../../models/User");
 
 router.get("/all", async (req, res) => {
   try {
@@ -67,63 +69,78 @@ router.post(
     ],
   ],
   async (req, res) => {
-    const errors = validationResult(req);
+    try {
+      const errors = validationResult(req);
 
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
 
-    const {
-      company,
-      website,
-      location,
-      status,
-      skills,
-      bio,
-      githubusername,
-      youtube,
-      twitter,
-      facebook,
-      linkedin,
-      instagram,
-    } = req.body;
-
-    const newProfileData = {
-      user: req.user._id,
-      company,
-      website,
-      location,
-      status,
-      skills,
-      bio,
-      githubusername,
-      social: {
+      const {
+        company,
+        website,
+        location,
+        status,
+        skills,
+        bio,
+        githubusername,
         youtube,
         twitter,
         facebook,
         linkedin,
         instagram,
-      },
-      lastModifiedDate: Date.now(),
-    };
+      } = req.body;
 
-    const existsingProfileData = await Profile.findOne({ user: req.user._id });
+      const newProfileData = {
+        user: req.user._id,
+        company,
+        website,
+        location,
+        status,
+        skills,
+        bio,
+        githubusername,
+        social: {
+          youtube,
+          twitter,
+          facebook,
+          linkedin,
+          instagram,
+        },
+        lastModifiedDate: Date.now(),
+      };
 
-    if (existsingProfileData) {
-      await Profile.findOneAndUpdate({ user: req.user._id }, newProfileData);
-    } else {
-      new Profile({
-        ...newProfileData,
-      }).save();
-    }
+      const existsingProfileData = await Profile.findOne({
+        user: req.user._id,
+      });
 
-    res.json("Success");
+      if (existsingProfileData) {
+        await Profile.findOneAndUpdate({ user: req.user._id }, newProfileData);
+        res.send(`Updated: ${req.user.name}`);
+      } else {
+        new Profile({
+          ...newProfileData,
+        }).save();
 
-    try {
+        res.send(`Added: ${req.user.name}`);
+      }
     } catch ({ message }) {
       res.status(500).json(message);
     }
   }
 );
+
+router.delete("/me/delete", authMiddleware, async (req, res) => {
+  try {
+    await Profile.findOneAndDelete({ user: req.user._id });
+    await User.findOneAndDelete({ user: req.user._id });
+    
+    res.send(
+      `Successfully deleted the profile of user: ${req.user.name} and the user itself.`
+    );
+  } catch ({ message }) {
+    res.status(500).json(message);
+  }
+});
 
 module.exports = router;
