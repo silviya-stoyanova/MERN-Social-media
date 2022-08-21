@@ -59,7 +59,7 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/get-github-repos/:userId", async (req, res) => {
+router.get("/github/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     const profile = await Profile.findOne({ user: userId });
