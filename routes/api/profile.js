@@ -1,4 +1,5 @@
 const express = require("express");
+const request = require("request");
 const { check, validationResult } = require("express-validator");
 const router = express.Router();
 const authMiddleware = require("../../middleware/auth-middleware");
@@ -53,6 +54,40 @@ router.get("/me", authMiddleware, async (req, res) => {
     }
 
     res.json({ profile });
+  } catch ({ message }) {
+    res.status(500).json({ message });
+  }
+});
+
+router.get("/get-github-repos/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const profile = await Profile.findOne({ user: userId });
+
+    if (!profile) {
+      res.status(400).json({ message: "Profile not found." });
+    }
+
+    const githubUsername = profile.githubusername;
+
+    const requestOptions = {
+      uri: `https://api.github.com/users/${githubUsername}/repos`,
+      headers: { "user-agent": "node.js" },
+    };
+
+    request(requestOptions, (error, response, body) => {
+      console.log(body);
+
+      if (body) {
+        body = JSON.parse(body);
+      }
+
+      if (response.statusCode !== 200) {
+        return res.status(response.statusCode).send(body.message);
+      }
+
+      res.json(body);
+    });
   } catch ({ message }) {
     res.status(500).json({ message });
   }
@@ -214,6 +249,11 @@ router.delete(
     try {
       const experienceId = req.params.experienceId;
       const profile = await Profile.findOne({ user: req.user._id });
+
+      if (!profile) {
+        res.status(400).json({ message: "Profile not found." });
+      }
+
       profile.experience = profile.experience.filter(
         (x) => x._id != experienceId
       );
@@ -233,9 +273,12 @@ router.delete(
     try {
       const educationId = req.params.educationId;
       const profile = await Profile.findOne({ user: req.user._id });
-      profile.education = profile.education.filter(
-        (x) => x._id != educationId
-      );
+
+      if (!profile) {
+        res.status(400).json({ message: "Profile not found." });
+      }
+
+      profile.education = profile.education.filter((x) => x._id != educationId);
       profile.save();
 
       res.send("Successfully deleted this education.");
